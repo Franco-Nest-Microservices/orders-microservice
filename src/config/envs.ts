@@ -3,11 +3,13 @@ import "dotenv/config"
 import * as joi from "joi"
 
 interface EnvVars {
-    PORT: number
+    PORT: number,
+    DATABASE_URL: string
 }
 
 const envSchema = joi.object({
-    PORT: joi.number().required()
+    PORT: joi.number().required(),
+    DATABASE_URL: joi.string().required()
 }).unknown(true)
 
 const { error, value } = envSchema.validate(process.env)
@@ -19,5 +21,6 @@ if(error){
 const envVars: EnvVars = value;
 
 export const envs = {
-    port : envVars.PORT
+    port : envVars.PORT,
+    DATABASE_URL: envVars.DATABASE_URL  
 }

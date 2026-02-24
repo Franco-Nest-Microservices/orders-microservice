@@ -9,5 +9,5 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=123123
+      - POSTGRES_PASSWORD=postgres123
       - POSTGRES_DB=orders_db
