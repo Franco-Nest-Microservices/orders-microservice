@@ -2,7 +2,11 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { OrderPaginationDto } from './dto/order-pagination.dto';
+import { PaginationDto } from 'src/common';
+import { StatusDto } from './dto/status.dto';
+import { OrderStatus } from '@prisma/client';
+import { ChangeOrderStatusDto } from './dto/change-order-status.dto';
 
 @Controller()
 export class OrdersController {
@@ -14,17 +18,22 @@ export class OrdersController {
   }
 
   @MessagePattern('findAllOrders')
-  findAll() {
-    return this.ordersService.findAll();
+  findAllById(@Payload() pagination: OrderPaginationDto) {
+    return this.ordersService.findAll(pagination);
+  }
+
+  @MessagePattern('findAllOrdersByStatus')
+  findAllByStatus(@Payload() {paginationDto, statusDto}: {paginationDto: PaginationDto, statusDto: StatusDto}) {
+    return this.ordersService.findAllByStatus(paginationDto, statusDto);
   }
 
   @MessagePattern('findOneOrder')
-  findOne(@Payload() payload: { id: number }) {
+  findOne(@Payload() payload: { id: string}) {
     return this.ordersService.findOne(payload.id);
   }
-
+  
   @MessagePattern("changeOrderStatus")
-  changeOrderStatus(@Payload() payload: { id: number, status: string }) {
-    return this.ordersService.changeOrderStatus(payload.id, payload.status);
+  changeOrderStatus(@Payload() changeOrderStatusDto: ChangeOrderStatusDto) {
+    return this.ordersService.changeOrderStatus(changeOrderStatusDto);
   }
 }
