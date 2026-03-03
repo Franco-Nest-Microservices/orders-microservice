@@ -1,29 +1,75 @@
-import { HttpCode, HttpStatus, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { HttpCode, HttpStatus, Inject, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from 'src/prisma.service';
 import { Order } from 'generated/prisma/client';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { OrderPaginationDto } from './dto/order-pagination.dto';
 import { PaginationDto } from 'src/common';
 import { OrderStatus } from '@prisma/client';
 import { StatusDto } from './dto/status.dto';
 import { Or } from '@prisma/client/runtime/client';
 import { ChangeOrderStatusDto } from './dto/change-order-status.dto';
+import { PRODUCTS_SERVICE } from 'src/config';
+import { catchError, firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class OrdersService{
 
   constructor(
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    @Inject(PRODUCTS_SERVICE) private readonly productsClient: ClientProxy
   ){}
 
 
-  create(createOrderDto: CreateOrderDto) {
+  async create(createOrderDto: CreateOrderDto) {
+    const ids = createOrderDto.items.map(item => item.productId);
+    const products: any[] = await firstValueFrom(this.productsClient.send({cmd: "validate_products"}, ids).pipe(
+      catchError(error=>{
+        throw new RpcException(error)
+      })
+    ));
+
+    const totalAmount = createOrderDto.items.reduce((acc, orderItem)=>{
+      const price = products.find(product => product.id === orderItem.productId).price
+      return acc + price * orderItem.quantity
+    }, 0)
+
+    const totalItems = createOrderDto.items.reduce((acc, orderItem)=>{
+      return acc + orderItem.quantity
+    }, 0)
+
+    const order = await this.prisma.order.create({
+      data: {
+        totalAmount,
+        totalItems,
+        OrderItem: {
+          createMany: {
+            data: createOrderDto.items.map(orderItem => ({
+              price: products.find(product=>product.id === orderItem.productId).price,
+              productId: orderItem.productId,
+              quantity: orderItem.quantity
+            }))
+          }
+        }
+      },
+      include: {
+        OrderItem: {
+          select: {
+            price: true,
+            quantity: true,
+            productId: true
+          }
+        }
+      }
+    })
+
     return {
-      service: "Orders Microservice",
-      createOrderDto: createOrderDto
+      ... order,
+      OrderItem: order.OrderItem.map(item=>({
+        ...item,
+        name: products.find(product=>product.id === item.productId).name
+      }))
     }
-    //return this.prisma.order.create({data: createOrderDto});
   }
 
   async findAll(paginationDto: OrderPaginationDto) {

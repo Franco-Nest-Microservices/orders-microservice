@@ -5,11 +5,15 @@ import * as joi from "joi"
 interface EnvVars {
     PORT: number,
     DATABASE_URL: string
+    PRODUCTS_MS_HOST : string
+    PRODUCTS_MS_PORT : number
 }
 
 const envSchema = joi.object({
     PORT: joi.number().required(),
-    DATABASE_URL: joi.string().required()
+    DATABASE_URL: joi.string().required(),
+    PRODUCTS_MS_HOST: joi.string().required(),
+    PRODUCTS_MS_PORT: joi.number().required()
 }).unknown(true)
 
 const { error, value } = envSchema.validate(process.env)
@@ -22,5 +26,7 @@ const envVars: EnvVars = value;
 
 export const envs = {
     port : envVars.PORT,
-    DATABASE_URL: envVars.DATABASE_URL  
+    DATABASE_URL: envVars.DATABASE_URL,
+    PRODUCTS_MS_HOST: envVars.PRODUCTS_MS_HOST,
+    PRODUCTS_MS_PORT: envVars.PRODUCTS_MS_PORT  
 }
