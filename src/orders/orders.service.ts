@@ -9,7 +9,7 @@ import { OrderStatus } from '@prisma/client';
 import { StatusDto } from './dto/status.dto';
 import { Or } from '@prisma/client/runtime/client';
 import { ChangeOrderStatusDto } from './dto/change-order-status.dto';
-import { PRODUCTS_SERVICE } from 'src/config';
+import { NATS_SERVICE, PRODUCTS_SERVICE } from 'src/config';
 import { catchError, first, firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -17,13 +17,13 @@ export class OrdersService{
 
   constructor(
     private readonly prisma: PrismaService,
-    @Inject(PRODUCTS_SERVICE) private readonly productsClient: ClientProxy
+    @Inject(NATS_SERVICE) private readonly client: ClientProxy
   ){}
 
 
   async create(createOrderDto: CreateOrderDto) {
     const ids = createOrderDto.items.map(item => item.productId);
-    const products: any[] = await firstValueFrom(this.productsClient.send({cmd: "validate_products"}, ids).pipe(
+    const products: any[] = await firstValueFrom(this.client.send({cmd: "validate_products"}, ids).pipe(
       catchError(error=>{
         throw new RpcException(error)
       })
@@ -115,7 +115,7 @@ export class OrdersService{
 
     const productsIds = order.OrderItem.map(item => item.productId);
     const products: any[] = await firstValueFrom(
-      this.productsClient.send({cmd: "validate_products"}, productsIds).pipe(
+      this.client.send({cmd: "validate_products"}, productsIds).pipe(
         catchError(error=>{
           throw new RpcException(error)
         })
