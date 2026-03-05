@@ -1,6 +1,6 @@
 import { IsEnum, IsOptional } from "class-validator";
 import { OrderStatusList } from "../enum/order.enum";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus } from "generated/prisma/enums";
 
 export class StatusDto {
     @IsOptional()

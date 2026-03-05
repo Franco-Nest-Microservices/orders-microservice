@@ -5,7 +5,6 @@ import { Order } from 'generated/prisma/client';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { OrderPaginationDto } from './dto/order-pagination.dto';
 import { PaginationDto } from 'src/common';
-import { OrderStatus } from '@prisma/client';
 import { StatusDto } from './dto/status.dto';
 import { Or } from '@prisma/client/runtime/client';
 import { ChangeOrderStatusDto } from './dto/change-order-status.dto';

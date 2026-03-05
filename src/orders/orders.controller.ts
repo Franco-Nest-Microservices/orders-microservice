@@ -5,9 +5,8 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderPaginationDto } from './dto/order-pagination.dto';
 import { PaginationDto } from 'src/common';
 import { StatusDto } from './dto/status.dto';
-import { OrderStatus } from '@prisma/client';
 import { ChangeOrderStatusDto } from './dto/change-order-status.dto';
-import { PRODUCTS_SERVICE } from 'src/config';
+
 
 @Controller()
 export class OrdersController {
