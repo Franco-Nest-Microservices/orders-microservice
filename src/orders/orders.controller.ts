@@ -6,6 +6,7 @@ import { OrderPaginationDto } from './dto/order-pagination.dto';
 import { PaginationDto } from 'src/common';
 import { StatusDto } from './dto/status.dto';
 import { ChangeOrderStatusDto } from './dto/change-order-status.dto';
+import { OrderWithProducts } from './interfaces/order-with-products.interface';
 
 
 @Controller()
@@ -13,8 +14,15 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @MessagePattern('createOrder')
-  create(@Payload() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+  async create(@Payload() createOrderDto: CreateOrderDto) {
+    const order: OrderWithProducts = await this.ordersService.create(createOrderDto);
+
+    const session = await this.ordersService.createPaymentSession(order);
+
+    return {
+      order,
+      session
+    }
   }
 
   @MessagePattern('findAllOrders')

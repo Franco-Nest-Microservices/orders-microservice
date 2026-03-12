@@ -10,6 +10,7 @@ import { Or } from '@prisma/client/runtime/client';
 import { ChangeOrderStatusDto } from './dto/change-order-status.dto';
 import { NATS_SERVICE, PRODUCTS_SERVICE } from 'src/config';
 import { catchError, first, firstValueFrom } from 'rxjs';
+import { OrderWithProducts } from './interfaces/order-with-products.interface';
 
 @Injectable()
 export class OrdersService{
@@ -144,5 +145,21 @@ export class OrdersService{
         status
       }
     })
+  }
+
+  async createPaymentSession(order: OrderWithProducts) {
+    const paymentSession = await firstValueFrom(
+      this.client.send("create.payment.session", {
+        items: order.OrderItem.map(item=>({name: item.name, price: item.price, quantity: item.quantity})),
+        currency: "usd",
+        orderId: order.id
+      }).pipe(
+        catchError(error=>{
+          throw new RpcException(error)
+        })
+      )
+    )
+
+    return paymentSession
   }
 }
