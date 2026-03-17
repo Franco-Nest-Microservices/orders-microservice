@@ -11,6 +11,7 @@ import { ChangeOrderStatusDto } from './dto/change-order-status.dto';
 import { NATS_SERVICE, PRODUCTS_SERVICE } from 'src/config';
 import { catchError, first, firstValueFrom } from 'rxjs';
 import { OrderWithProducts } from './interfaces/order-with-products.interface';
+import { PaidOrderDto } from './dto/paid-order.dto';
 
 @Injectable()
 export class OrdersService{
@@ -162,4 +163,29 @@ export class OrdersService{
 
     return paymentSession
   }
+
+  async paidOrder(paidOrderDto: PaidOrderDto){
+    const order = await this.prisma.order.update({
+      where: {
+        id: paidOrderDto.orderId
+      },
+      data: {
+        status: "PAID",
+        paid: true,
+        paidAt: new Date(),
+        stripeChargeId: paidOrderDto.strypePaymentId,
+
+        // Relation
+
+        OrderReceipt: {
+          create: {
+            receiptUrl: paidOrderDto.receiptUrl
+          }
+        }
+      }      
+    })
+
+    return order
+  }
+
 }
