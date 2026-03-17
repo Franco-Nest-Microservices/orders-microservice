@@ -1,5 +1,5 @@
 import { Controller, Inject } from '@nestjs/common';
-import { ClientProxy, MessagePattern, Payload } from '@nestjs/microservices';
+import { ClientProxy, EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderPaginationDto } from './dto/order-pagination.dto';
@@ -7,6 +7,7 @@ import { PaginationDto } from 'src/common';
 import { StatusDto } from './dto/status.dto';
 import { ChangeOrderStatusDto } from './dto/change-order-status.dto';
 import { OrderWithProducts } from './interfaces/order-with-products.interface';
+import { PaidOrderDto } from './dto/paid-order.dto';
 
 
 @Controller()
@@ -43,5 +44,11 @@ export class OrdersController {
   @MessagePattern("changeOrderStatus")
   changeOrderStatus(@Payload() changeOrderStatusDto: ChangeOrderStatusDto) {
     return this.ordersService.changeOrderStatus(changeOrderStatusDto);
+  }
+
+  @EventPattern("payment.succeeded")
+  paidOrder(@Payload() payload: PaidOrderDto){
+    console.log(payload)
+    return
   }
 }
